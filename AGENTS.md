@@ -73,6 +73,28 @@ AI output is a draft for a human to review, not an answer to trust.
   be fully tested locally.
 - Do not commit secrets, and do not push to or force-push `main`.
 
+## GitHub Actions: pin to commit SHAs
+
+Tags can be moved or re-pointed, so every `uses:` in `.github/workflows/` must
+reference the **full 40-character commit SHA of the latest release tag**, with
+the tag in a trailing comment:
+
+```yaml
+- uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+```
+
+- Look up the latest release tag first, then resolve it to a commit (for an
+  annotated tag use the commit it points to, not the tag object):
+  `git ls-remote --tags https://github.com/<owner>/<repo> | sort -V`.
+  Do not guess versions from memory; they go stale.
+- Never use a branch or floating tag (`@v4`, `@stable`, `@main`).
+- Some actions select a version by ref (for example `dtolnay/rust-toolchain@stable`).
+  When pinning those, pass the version as an input instead
+  (`with: toolchain: stable`).
+- After bumping, read the action's `action.yml` to confirm the inputs and
+  outputs we use still exist, since new major versions can rename them.
+- Dependabot (`.github/dependabot.yml`) updates SHA pins and their comments.
+
 ## Commits and pull requests
 
 - Conventional Commits: `feat:`, `fix:`, `docs:`, `test:`, `ci:`, `chore:`,

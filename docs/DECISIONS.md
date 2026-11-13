@@ -35,3 +35,9 @@ no manual release step. PRs are squash-merged with a validated title.
 ## 7. Agent instructions in one file
 `AGENTS.md` is canonical; tool-specific files only point to it, so instructions
 cannot drift between assistants.
+
+## 8. GitHub Actions pinned to commit SHAs
+Workflows reference the commit SHA of each action's latest release tag (tag in a
+trailing comment) so a moved or compromised tag cannot change what CI runs.
+Dependabot keeps the pins current. Actions that choose a version by ref, such as
+`dtolnay/rust-toolchain`, take it as a `toolchain` input instead.
