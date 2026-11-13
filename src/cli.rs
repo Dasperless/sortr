@@ -2,12 +2,31 @@
 
 use std::path::PathBuf;
 
-use clap::Parser;
+use clap::{Args, Parser, Subcommand};
 
 /// Organize files into folders by type.
 #[derive(Debug, Parser)]
-#[command(name = "sortr", version, about)]
+#[command(name = "sortr", version, about, args_conflicts_with_subcommands = true)]
 pub struct Cli {
+    #[command(subcommand)]
+    pub command: Option<Command>,
+
+    #[command(flatten)]
+    pub organize: OrganizeArgs,
+}
+
+#[derive(Debug, Subcommand)]
+pub enum Command {
+    /// Undo the most recent run in a directory.
+    Undo {
+        /// Directory that was organized (defaults to the current directory).
+        #[arg(default_value = ".")]
+        path: PathBuf,
+    },
+}
+
+#[derive(Debug, Args)]
+pub struct OrganizeArgs {
     /// Directory to organize (defaults to the current directory).
     #[arg(default_value = ".")]
     pub path: PathBuf,
@@ -42,15 +61,27 @@ mod tests {
     #[test]
     fn defaults_to_current_directory() {
         let cli = Cli::parse_from(["sortr"]);
-        assert_eq!(cli.path, PathBuf::from("."));
-        assert!(!cli.recursive && !cli.verbose && !cli.dry_run);
+        assert!(cli.command.is_none());
+        let a = cli.organize;
+        assert_eq!(a.path, PathBuf::from("."));
+        assert!(!a.recursive && !a.verbose && !a.dry_run);
     }
 
     #[test]
     fn parses_flags_and_path() {
         let cli = Cli::parse_from(["sortr", "-r", "-v", "-n", "-c", "r.toml", "/tmp/x"]);
-        assert_eq!(cli.config, Some(PathBuf::from("r.toml")));
-        assert_eq!(cli.path, PathBuf::from("/tmp/x"));
-        assert!(cli.recursive && cli.verbose && cli.dry_run);
+        let a = cli.organize;
+        assert_eq!(a.path, PathBuf::from("/tmp/x"));
+        assert_eq!(a.config, Some(PathBuf::from("r.toml")));
+        assert!(a.recursive && a.verbose && a.dry_run);
+    }
+
+    #[test]
+    fn parses_undo_subcommand() {
+        let cli = Cli::parse_from(["sortr", "undo", "/tmp/x"]);
+        match cli.command {
+            Some(Command::Undo { path }) => assert_eq!(path, PathBuf::from("/tmp/x")),
+            other => panic!("expected undo, got {other:?}"),
+        }
     }
 }

@@ -12,3 +12,4 @@ pub mod mover;
 pub mod planner;
 pub mod report;
 pub mod scanner;
+pub mod undo;
