@@ -7,6 +7,7 @@
 pub mod cli;
 pub mod config;
 pub mod error;
+pub mod journal;
 pub mod mover;
 pub mod planner;
 pub mod report;
