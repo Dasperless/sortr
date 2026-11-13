@@ -95,12 +95,35 @@ the tag in a trailing comment:
   outputs we use still exist, since new major versions can rename them.
 - Dependabot (`.github/dependabot.yml`) updates SHA pins and their comments.
 
+## Branch naming
+
+Branches are named `<type>/<small-description>`.
+
+- `<type>` is one of the Conventional Commit types: `feat`, `fix`, `docs`,
+  `test`, `ci`, `chore`, `refactor`, `perf`. Use the same type as the PR title.
+- `<small-description>` is short, meaningful and readable: lowercase words
+  joined by hyphens, usually 2 to 4 words, saying what the change does.
+- Do not use issue numbers, dates, session ids, tool names or the author's name
+  as the description, and do not pad it into a sentence.
+
+| Good | Bad |
+|---|---|
+| `fix/release-version-bump` | `fix/stuff` |
+| `feat/json-output` | `feat/issue-12-implementation-of-the-new-json-output-feature` |
+| `docs/branch-naming` | `claude/session-0176hb` |
+| `ci/pin-actions` | `my-branch` |
+
+If the environment or tooling mandates a specific branch name (for example a
+cloud session that must push to one given branch), that instruction wins. Say so
+in the PR description.
+
 ## Commits and pull requests
 
 - Conventional Commits: `feat:`, `fix:`, `docs:`, `test:`, `ci:`, `chore:`,
   `refactor:`. Releases are computed from them. PR titles must follow the same
   format (enforced by CI; PRs are squash-merged).
 - Link the issue. Fill in the PR template.
+- Branch from `main` using the naming rule above; one branch per issue.
 
 ## Definition of done
 
