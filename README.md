@@ -106,3 +106,12 @@ The code separates *planning* (`scanner`, `planner`) from *execution*
 (`mover`), which is what makes dry runs and undo straightforward. Releases are
 automated from [Conventional Commits](https://www.conventionalcommits.org/)
 with semantic-release: use `feat:`, `fix:` and similar prefixes in PR titles.
+
+## License
+
+[MIT](LICENSE), copyright (c) 2026 Dasperless.
+
+You are free to use, modify and fork sortr. The one condition is attribution:
+**every copy or substantial portion, including forks, must keep the copyright
+notice and the license text**, so the original author stays credited. If you
+fork it, please also link back to <https://github.com/Dasperless/sortr>.
