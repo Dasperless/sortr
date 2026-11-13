@@ -8,6 +8,7 @@ license = "MIT"
 repository = "https://github.com/Dasperless/sortr"
 
 [dependencies]
+thiserror = "2.0.20"
 
 [dev-dependencies]
 tempfile = "3.27.0"
