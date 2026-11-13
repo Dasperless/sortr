@@ -2,7 +2,7 @@ use std::process::ExitCode;
 
 use clap::Parser;
 use sortr::cli::Cli;
-use sortr::{mover, planner, scanner};
+use sortr::{mover, planner, report, scanner};
 
 fn main() -> ExitCode {
     let cli = Cli::parse();
@@ -16,6 +16,12 @@ fn main() -> ExitCode {
     };
 
     let moves = planner::plan(&cli.path, &files, planner::default_category);
+
+    if cli.dry_run {
+        println!("{}", report::format_plan(&moves, &cli.path));
+        return ExitCode::SUCCESS;
+    }
+
     let outcome = mover::execute(&moves);
 
     if cli.verbose {
@@ -26,13 +32,7 @@ fn main() -> ExitCode {
     for err in &outcome.failed {
         eprintln!("error: {err}");
     }
-    println!(
-        "Moved {} file(s), {} failed, {} folder(s) created in {}",
-        outcome.moved.len(),
-        outcome.failed.len(),
-        outcome.created_dirs.len(),
-        cli.path.display()
-    );
+    println!("{}", report::format_summary(&outcome, &cli.path));
 
     if outcome.failed.is_empty() {
         ExitCode::SUCCESS

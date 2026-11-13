@@ -8,4 +8,5 @@ pub mod cli;
 pub mod error;
 pub mod mover;
 pub mod planner;
+pub mod report;
 pub mod scanner;

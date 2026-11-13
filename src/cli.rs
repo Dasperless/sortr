@@ -16,6 +16,10 @@ pub struct Cli {
     #[arg(short, long)]
     pub recursive: bool,
 
+    /// Show what would be moved without changing anything.
+    #[arg(short = 'n', long)]
+    pub dry_run: bool,
+
     /// Print every move, not just the summary.
     #[arg(short, long)]
     pub verbose: bool,
@@ -35,13 +39,13 @@ mod tests {
     fn defaults_to_current_directory() {
         let cli = Cli::parse_from(["sortr"]);
         assert_eq!(cli.path, PathBuf::from("."));
-        assert!(!cli.recursive && !cli.verbose);
+        assert!(!cli.recursive && !cli.verbose && !cli.dry_run);
     }
 
     #[test]
     fn parses_flags_and_path() {
-        let cli = Cli::parse_from(["sortr", "-r", "-v", "/tmp/x"]);
+        let cli = Cli::parse_from(["sortr", "-r", "-v", "-n", "/tmp/x"]);
         assert_eq!(cli.path, PathBuf::from("/tmp/x"));
-        assert!(cli.recursive && cli.verbose);
+        assert!(cli.recursive && cli.verbose && cli.dry_run);
     }
 }
