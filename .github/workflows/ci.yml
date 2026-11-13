@@ -47,3 +47,32 @@ jobs:
       - uses: Swatinem/rust-cache@2201cc584a476d1b508be977bbe4b7d1c7a52e9c # v2.9.3
       - run: cargo build --locked
       - run: cargo test --locked
+
+  # Squash-merges Dependabot PRs once every CI job above has passed, but only
+  # when all updated dependencies are patch or minor bumps. Majors, failing CI
+  # and human PRs are never touched. Write permissions are limited to this job.
+  dependabot-merge:
+    name: auto-merge Dependabot
+    needs: [lint, test, msrv]
+    if: github.event_name == 'pull_request' && github.event.pull_request.user.login == 'dependabot[bot]'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - id: metadata
+        uses: dependabot/fetch-metadata@25dd0e34f4fe68f24cc83900b1fe3fe149efef98 # v3.1.0
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Merge patch and minor updates
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          # Passed through the environment, never interpolated into the script.
+          DEPENDENCIES: ${{ steps.metadata.outputs.updated-dependencies-json }}
+        run: |
+          if echo "$DEPENDENCIES" | jq -e 'length > 0 and all(.[]; .updateType == "version-update:semver-patch" or .updateType == "version-update:semver-minor")' > /dev/null; then
+            gh pr merge --squash --delete-branch "$PR_URL"
+          else
+            echo "Not auto-merging: no metadata, or at least one major update."
+          fi
