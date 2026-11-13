@@ -15,7 +15,8 @@ cd "$(dirname "$0")/.."
 sed -i.bak -E "0,/^version = \".*\"/s//version = \"${version}\"/" Cargo.toml
 rm -f Cargo.toml.bak
 
-# Refresh the root package's entry in Cargo.lock without touching dependencies.
-cargo update --workspace --offline
+# Refresh the root package's entry in Cargo.lock without touching dependencies
+# (--workspace). Do not use --offline: a fresh CI runner has no registry cache.
+cargo update --workspace
 
 grep -m1 '^version = ' Cargo.toml
