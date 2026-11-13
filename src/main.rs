@@ -3,6 +3,7 @@ use std::process::ExitCode;
 use clap::Parser;
 use sortr::cli::Cli;
 use sortr::config::{self, Rules};
+use sortr::journal::Journal;
 use sortr::{mover, planner, report, scanner};
 
 fn main() -> ExitCode {
@@ -33,6 +34,8 @@ fn main() -> ExitCode {
 
     let outcome = mover::execute(&moves);
 
+    record_journal(&cli.path, &outcome);
+
     if cli.verbose {
         for m in &outcome.moved {
             println!("{} -> {}", m.from.display(), m.to.display());
@@ -59,5 +62,16 @@ fn load_rules(cli: &Cli) -> Result<Rules, config::ConfigError> {
     match config::default_config_path() {
         Some(path) if path.is_file() => Rules::load(&path),
         _ => Ok(Rules::default()),
+    }
+}
+
+/// Best effort: a journal problem must not turn a successful run into a failure.
+fn record_journal(root: &std::path::Path, outcome: &mover::Outcome) {
+    let result = Journal::load(root).and_then(|mut journal| {
+        journal.record(outcome);
+        journal.save(root)
+    });
+    if let Err(err) = result {
+        eprintln!("warning: {err}; this run cannot be undone");
     }
 }
