@@ -8,6 +8,7 @@ license = "MIT"
 repository = "https://github.com/Dasperless/sortr"
 
 [dependencies]
+clap = { version = "4.5.61", features = ["derive"] }
 thiserror = "2.0.20"
 
 [dev-dependencies]
