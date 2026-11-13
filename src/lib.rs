@@ -5,6 +5,7 @@
 //! undo simple and makes the logic easy to test.
 
 pub mod cli;
+pub mod config;
 pub mod error;
 pub mod mover;
 pub mod planner;

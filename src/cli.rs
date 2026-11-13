@@ -16,6 +16,10 @@ pub struct Cli {
     #[arg(short, long)]
     pub recursive: bool,
 
+    /// TOML file with category rules (see sortr.example.toml).
+    #[arg(short, long, value_name = "FILE")]
+    pub config: Option<PathBuf>,
+
     /// Show what would be moved without changing anything.
     #[arg(short = 'n', long)]
     pub dry_run: bool,
@@ -44,7 +48,8 @@ mod tests {
 
     #[test]
     fn parses_flags_and_path() {
-        let cli = Cli::parse_from(["sortr", "-r", "-v", "-n", "/tmp/x"]);
+        let cli = Cli::parse_from(["sortr", "-r", "-v", "-n", "-c", "r.toml", "/tmp/x"]);
+        assert_eq!(cli.config, Some(PathBuf::from("r.toml")));
         assert_eq!(cli.path, PathBuf::from("/tmp/x"));
         assert!(cli.recursive && cli.verbose && cli.dry_run);
     }
