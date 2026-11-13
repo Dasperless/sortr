@@ -1,0 +1,47 @@
+//! Command-line interface definition.
+
+use std::path::PathBuf;
+
+use clap::Parser;
+
+/// Organize files into folders by type.
+#[derive(Debug, Parser)]
+#[command(name = "sortr", version, about)]
+pub struct Cli {
+    /// Directory to organize (defaults to the current directory).
+    #[arg(default_value = ".")]
+    pub path: PathBuf,
+
+    /// Also organize files in subdirectories.
+    #[arg(short, long)]
+    pub recursive: bool,
+
+    /// Print every move, not just the summary.
+    #[arg(short, long)]
+    pub verbose: bool,
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use clap::CommandFactory;
+
+    #[test]
+    fn definition_is_valid() {
+        Cli::command().debug_assert();
+    }
+
+    #[test]
+    fn defaults_to_current_directory() {
+        let cli = Cli::parse_from(["sortr"]);
+        assert_eq!(cli.path, PathBuf::from("."));
+        assert!(!cli.recursive && !cli.verbose);
+    }
+
+    #[test]
+    fn parses_flags_and_path() {
+        let cli = Cli::parse_from(["sortr", "-r", "-v", "/tmp/x"]);
+        assert_eq!(cli.path, PathBuf::from("/tmp/x"));
+        assert!(cli.recursive && cli.verbose);
+    }
+}
