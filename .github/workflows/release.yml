@@ -1,0 +1,126 @@
+name: Release
+
+# Runs on every push to main. semantic-release decides from the Conventional
+# Commits whether a release is due. If one is, binaries are built for all
+# targets and attached to the GitHub Release it created.
+on:
+  push:
+    branches: [main]
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    outputs:
+      published: ${{ steps.semantic.outputs.new_release_published }}
+      version: ${{ steps.semantic.outputs.new_release_version }}
+      tag: ${{ steps.semantic.outputs.new_release_git_tag }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # v1
+        with:
+          toolchain: stable
+      - id: semantic
+        uses: cycjimmy/semantic-release-action@ad51787758d9654d5a75150a89a6fa9b3ccef95e # v8.1.4
+        with:
+          semantic_version: 24
+          extra_plugins: |
+            @semantic-release/changelog@6
+            @semantic-release/exec@6
+            @semantic-release/git@10
+        env:
+          # Use a PAT or GitHub App token in RELEASE_TOKEN if main is protected
+          # and the default token may not push the release commit.
+          GITHUB_TOKEN: ${{ secrets.RELEASE_TOKEN || secrets.GITHUB_TOKEN }}
+
+  build:
+    name: build (${{ matrix.target }})
+    needs: release
+    if: needs.release.outputs.published == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { target: x86_64-unknown-linux-gnu, os: ubuntu-latest, archive: tar.gz }
+          - { target: aarch64-unknown-linux-gnu, os: ubuntu-24.04-arm, archive: tar.gz }
+          - { target: x86_64-apple-darwin, os: macos-latest, archive: tar.gz }
+          - { target: aarch64-apple-darwin, os: macos-latest, archive: tar.gz }
+          - { target: x86_64-pc-windows-msvc, os: windows-latest, archive: zip }
+          - { target: aarch64-pc-windows-msvc, os: windows-latest, archive: zip }
+    runs-on: ${{ matrix.os }}
+    steps:
+      # Build the exact commit semantic-release tagged (includes the version bump).
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.release.outputs.tag }}
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # v1
+        with:
+          toolchain: stable
+          targets: ${{ matrix.target }}
+      - uses: Swatinem/rust-cache@2201cc584a476d1b508be977bbe4b7d1c7a52e9c # v2.9.3
+        with:
+          key: ${{ matrix.target }}
+      - run: cargo build --release --locked --target ${{ matrix.target }}
+      - name: Package
+        shell: bash
+        run: |
+          name="sortr-${{ needs.release.outputs.tag }}-${{ matrix.target }}"
+          mkdir -p "dist/$name"
+          bin=sortr
+          [ "${{ matrix.archive }}" = zip ] && bin=sortr.exe
+          cp "target/${{ matrix.target }}/release/$bin" "dist/$name/"
+          for extra in README.md LICENSE; do
+            [ -f "$extra" ] && cp "$extra" "dist/$name/"
+          done
+          cd dist
+          if [ "${{ matrix.archive }}" = zip ]; then
+            7z a "$name.zip" "$name" > /dev/null
+            file="$name.zip"
+          else
+            tar -czf "$name.tar.gz" "$name"
+            file="$name.tar.gz"
+          fi
+          if command -v sha256sum > /dev/null; then
+            sha256sum "$file" > "$file.sha256"
+          else
+            shasum -a 256 "$file" > "$file.sha256"
+          fi
+          echo "ASSET=dist/$file" >> "$GITHUB_ENV"
+      - name: Upload to the release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release upload "${{ needs.release.outputs.tag }}" "$ASSET" "$ASSET.sha256" --clobber
+
+  publish-crate:
+    name: publish to crates.io
+    needs: release
+    if: needs.release.outputs.published == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: ${{ needs.release.outputs.tag }}
+      - uses: dtolnay/rust-toolchain@683b588c487a69d01f6c6ddf40f036ff682cc2c8 # v1
+        with:
+          toolchain: stable
+      - name: cargo publish (skipped if CARGO_REGISTRY_TOKEN is not set)
+        env:
+          CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN }}
+        run: |
+          if [ -z "$CARGO_REGISTRY_TOKEN" ]; then
+            echo "CARGO_REGISTRY_TOKEN not set; skipping crates.io publish."
+            exit 0
+          fi
+          cargo publish --locked

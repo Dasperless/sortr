@@ -1,0 +1,15 @@
+# Example sortr rules. Pass with `sortr --config sortr.example.toml <PATH>`,
+# or copy to ~/.config/sortr/config.toml (loaded automatically).
+#
+# Each category is a folder created inside the directory being organized.
+# Extensions are case-insensitive and may be written with or without a dot.
+# Files whose extension is not listed go to `<ext>_folder`.
+
+[categories]
+images = ["jpg", "jpeg", "png", "gif", "webp", "svg"]
+documents = ["pdf", "doc", "docx", "txt", "md", "odt"]
+spreadsheets = ["xls", "xlsx", "csv", "ods"]
+audio = ["mp3", "wav", "flac", "ogg"]
+video = ["mp4", "mkv", "mov", "avi"]
+archives = ["zip", "tar", "gz", "7z", "rar"]
+code = ["rs", "py", "js", "ts", "c", "cpp", "go", "java"]
