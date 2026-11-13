@@ -41,3 +41,10 @@ Workflows reference the commit SHA of each action's latest release tag (tag in a
 trailing comment) so a moved or compromised tag cannot change what CI runs.
 Dependabot keeps the pins current. Actions that choose a version by ref, such as
 `dtolnay/rust-toolchain`, take it as a `toolchain` input instead.
+
+## 9. Branch names are `<type>/<small-description>`
+The type reuses the Conventional Commit vocabulary, so a branch name already says
+which kind of release (if any) its PR will cause, and branch lists sort and scan
+by type. A short readable description keeps `git branch` and PR lists useful;
+issue numbers live in the PR, not the name. Where tooling mandates a branch name,
+that wins.

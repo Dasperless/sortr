@@ -24,6 +24,14 @@ assistants (see [`AGENTS.md`](AGENTS.md) for the agent-specific details).
 5. **Open a PR** and fill in the template. AI-generated code gets the same
    scrutiny as any other: a human must read and understand it before merging.
 
+## Branch names
+
+`<type>/<small-description>`: a Conventional Commit type, a slash, then a short,
+meaningful, readable description in lowercase words joined by hyphens (usually
+2 to 4 words). Examples: `fix/release-version-bump`, `feat/json-output`,
+`docs/branch-naming`. Avoid issue numbers, dates, session ids and vague names
+like `fix/stuff`.
+
 ## Commit and PR title format
 
 [Conventional Commits](https://www.conventionalcommits.org/). Releases are
